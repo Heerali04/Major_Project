@@ -1,0 +1,11 @@
+Flask
+pytesseract
+pdf2image
+opencv-python
+spacy
+pandas
+numpy
+scikit-learn
+reportlab
+matplotlib
+plotly
