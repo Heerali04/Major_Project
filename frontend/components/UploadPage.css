@@ -1,0 +1,214 @@
+/* --- Variables (Assuming these are defined in a global stylesheet) --- */
+:root {
+    --accent-color: #00bcd4; /* Vibrant Teal/Aqua */
+    --accent-dark: #0097a7;
+    --bg-light: #f7f9fb;
+    --text-light: #333;
+    --bg-dark: #212121;
+    --text-dark: #e0e0e0;
+    --card-light: #ffffff;
+    --card-dark: #3a3a3a;
+    --border-light: #e0e0e0;
+    --border-dark: #555;
+    --success-color: #4CAF50;
+    --danger-color: #F44336;
+    --warning-color: #FFC107;
+    --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.05);
+    --shadow-dark: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Base Page Layout --- */
+.upload-page {
+    padding: 40px 20px;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    min-height: 100vh;
+    transition: background-color 0.4s ease, color 0.4s ease;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 800px; /* Constrain width */
+    margin: 0 auto;
+}
+
+/* Dark Mode Overrides */
+.upload-page.dark {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+/* Header */
+.upload-page h2 {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.upload-page.dark h2 {
+    border-bottom-color: var(--border-dark);
+}
+
+/* Input and Upload Button Section */
+.upload-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    background: var(--card-light);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-light);
+    margin-bottom: 40px;
+    border: 1px solid var(--border-light);
+}
+
+.upload-page.dark .upload-controls {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+    box-shadow: var(--shadow-dark);
+}
+
+/* File Input Styling */
+.upload-controls input[type="file"] {
+    padding: 10px 0;
+    font-size: 1em;
+    color: var(--text-light);
+}
+
+.upload-page.dark .upload-controls input[type="file"] {
+    color: var(--text-dark);
+}
+
+
+/* Upload Button */
+.upload-controls button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: 600;
+    background-color: var(--accent-color);
+    color: white;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    box-shadow: 0 4px 10px rgba(0, 188, 212, 0.2);
+}
+
+.upload-controls button:hover:not(:disabled) {
+    background-color: var(--accent-dark);
+    box-shadow: 0 6px 12px rgba(0, 188, 212, 0.3);
+}
+
+.upload-controls button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
+}
+
+.upload-page.dark .upload-controls button:disabled {
+    background-color: #555;
+    color: #bbb;
+}
+
+/* Error Message */
+.upload-controls .error {
+    color: var(--danger-color);
+    background-color: rgba(244, 67, 54, 0.1);
+    border-left: 5px solid var(--danger-color);
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+/* --- Report List Container --- */
+.uploaded-reports-list {
+    margin-top: 30px;
+}
+
+/* Individual Report Card (The Aesthetic Key) */
+.uploaded-reports-list .report-card {
+    background: var(--card-light);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    padding: 20px 25px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+}
+
+.uploaded-reports-list .report-card:hover {
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+.upload-page.dark .uploaded-reports-list .report-card {
+    border-color: var(--border-dark);
+    background-color: var(--card-dark);
+    box-shadow: var(--shadow-dark);
+}
+
+.report-card h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3em;
+    font-weight: 600;
+    color: var(--accent-dark);
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--border-light);
+}
+
+.upload-page.dark .report-card h3 {
+    color: var(--accent-color);
+    border-bottom-color: var(--border-dark);
+}
+
+.report-card p {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.report-card strong {
+    font-weight: 700;
+    color: var(--text-light);
+}
+
+.upload-page.dark .report-card strong {
+    color: var(--text-dark);
+}
+
+/* Risk Level Styling */
+.report-card p:has(strong:contains("Risk Level")) {
+    font-weight: 600;
+    padding: 8px 0;
+}
+
+/* Color coding based on risk level */
+.report-card p:contains("High") { color: var(--danger-color); }
+.report-card p:contains("Medium") { color: var(--warning-color); }
+.report-card p:contains("Low") { color: var(--success-color); }
+
+/* Suggestions and Reasoning Lists */
+.report-card div {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+}
+
+.upload-page.dark .report-card div {
+    border-top-color: var(--border-dark);
+}
+
+.report-card ul {
+    list-style: disc outside;
+    padding-left: 20px;
+    margin-top: 8px;
+}
+
+.report-card li {
+    margin-bottom: 5px;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.upload-page.dark .report-card li {
+    color: #ccc;
+}
