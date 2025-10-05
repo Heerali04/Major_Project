@@ -1,0 +1,269 @@
+/* --- Variables (For consistency across components) --- */
+:root {
+    --accent-color: #00bcd4; /* Vibrant Teal/Aqua */
+    --accent-dark: #0097a7;
+    --bg-light: #f7f9fb;
+    --text-light: #333;
+    --bg-dark: #212121;
+    --text-dark: #e0e0e0;
+    --card-light: #ffffff;
+    --card-dark: #3a3a3a;
+    --border-light: #e0e0e0;
+    --border-dark: #555;
+    --success-color: #4CAF50;
+    --danger-color: #F44336;
+    --warning-color: #FFC107;
+    --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.05);
+    --shadow-dark: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+/* --- Base Page Layout --- */
+.symptoms-page {
+    padding: 40px 20px;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    min-height: 100vh;
+    transition: background-color 0.4s ease, color 0.4s ease;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    max-width: 700px; 
+    margin: 0 auto;
+}
+
+/* Dark Mode Overrides */
+.symptoms-page.dark {
+    background-color: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+/* Header */
+.symptoms-page h1 {
+    font-size: 2em;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 30px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.symptoms-page.dark h1 {
+    border-bottom-color: var(--border-dark);
+}
+
+/* --- Form Container --- */
+.symptoms-page form {
+    background: var(--card-light);
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-light);
+    margin-bottom: 40px;
+    border: 1px solid var(--border-light);
+    transition: all 0.3s ease;
+}
+
+.symptoms-page.dark form {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+    box-shadow: var(--shadow-dark);
+}
+
+/* Label */
+.symptoms-page label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+/* Input Field */
+.symptoms-page input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 1em;
+    background-color: var(--bg-light);
+    color: var(--text-light);
+    transition: border-color 0.3s ease, background-color 0.3s ease;
+}
+
+.symptoms-page.dark input[type="text"] {
+    background-color: #2c2c2c;
+    border-color: #555;
+    color: var(--text-dark);
+}
+
+.symptoms-page input[type="text"]:focus {
+    border-color: var(--accent-color);
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(0, 188, 212, 0.2);
+}
+
+/* Button Group */
+.symptoms-page .button-group {
+    display: flex;
+    gap: 15px;
+}
+
+/* Buttons */
+.symptoms-page button {
+    padding: 12px 25px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: 600;
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+/* Predict Button (Primary) */
+.symptoms-page button[type="submit"] {
+    background-color: var(--accent-color);
+    color: white;
+    box-shadow: 0 4px 10px rgba(0, 188, 212, 0.2);
+}
+
+.symptoms-page button[type="submit"]:hover:not(:disabled) {
+    background-color: var(--accent-dark);
+    box-shadow: 0 6px 12px rgba(0, 188, 212, 0.3);
+}
+
+.symptoms-page button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+    box-shadow: none;
+}
+
+/* Clear Button (Secondary) */
+.symptoms-page button[type="button"] {
+    background-color: #e0e0e0;
+    color: var(--text-light);
+}
+
+.symptoms-page button[type="button"]:hover {
+    background-color: #bdbdbd;
+}
+
+.symptoms-page.dark button[type="button"] {
+    background-color: #555;
+    color: var(--text-dark);
+}
+
+.symptoms-page.dark button[type="button"]:hover {
+    background-color: #666;
+}
+
+/* Error Message */
+.symptoms-page .error {
+    color: var(--danger-color);
+    background-color: rgba(244, 67, 54, 0.1);
+    border-left: 5px solid var(--danger-color);
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+.symptoms-page.dark .error {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #ffcdd2;
+}
+
+/* --- Report/Prediction Card --- */
+.symptoms-page .report-card {
+    margin-top: 30px;
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1); /* Stronger shadow for focus */
+    background: var(--card-light);
+    border: 1px solid var(--border-light);
+    transition: all 0.4s ease;
+}
+
+.symptoms-page.dark .report-card {
+    background: var(--card-dark);
+    border-color: var(--border-dark);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.report-card h2 {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--accent-dark);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.symptoms-page.dark .report-card h2 {
+    color: var(--accent-color);
+    border-bottom-color: var(--border-dark);
+}
+
+.report-card p {
+    margin: 8px 0;
+    line-height: 1.5;
+}
+
+.report-card strong {
+    font-weight: 700;
+    color: var(--accent-dark);
+    margin-right: 5px;
+}
+
+.symptoms-page.dark .report-card strong {
+    color: var(--accent-color);
+}
+
+/* Risk Level Styling */
+.report-card .risk-level-display {
+    padding: 10px 15px;
+    border-radius: 5px;
+    margin: 15px 0;
+    font-size: 1.1em;
+    font-weight: 700;
+    border-left: 5px solid;
+    background-color: rgba(0, 188, 212, 0.05);
+}
+
+/* Dynamic Risk Colors */
+.report-card .risk-high {
+    color: var(--danger-color);
+    border-left-color: var(--danger-color);
+}
+
+.report-card .risk-medium {
+    color: var(--warning-color);
+    border-left-color: var(--warning-color);
+}
+
+.report-card .risk-low {
+    color: var(--success-color);
+    border-left-color: var(--success-color);
+}
+
+/* Suggestions and Reasoning Lists */
+.report-card div {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-light);
+}
+
+.symptoms-page.dark .report-card div {
+    border-top-color: var(--border-dark);
+}
+
+.report-card ul {
+    list-style: disc outside;
+    padding-left: 20px;
+    margin-top: 8px;
+}
+
+.report-card li {
+    margin-bottom: 5px;
+    font-size: 0.95em;
+    color: #555;
+}
+
+.symptoms-page.dark .report-card li {
+    color: #ccc;
+}
