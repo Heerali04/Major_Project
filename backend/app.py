@@ -10,7 +10,8 @@ from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
-from bson import ObjectId, json_util # Import json_util for robust ObjectId handling
+from bson import ObjectId, json_util  # Import json_util for robust ObjectId handling
+from openai import OpenAI  # ✅ LLM integration
 
 # --- ML Imports ---
 import joblib
@@ -20,6 +21,7 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # --- Rule-Based Logic (Unchanged) ---
+
 SYMPTOM_DISEASE_MAP = {
     "Rabies": {"anxiety": 1, "bite": 2, "saliva": 1, "hallucination": 1, "paralysis": 1, "hydrophobia": 2, "agitation": 1},
     "Nipah": {"fever": 1, "headache": 1, "seizure": 1, "respiratory distress": 2, "encephalitis": 2, "confusion": 1, "cough": 1, "vomiting": 1},
@@ -47,7 +49,11 @@ reports_collection.create_index("disease")
 reports_collection.create_index("created_at")
 reports_collection.create_index("user_id")
 
-# ---------------- Helpers (Mostly Unchanged) ----------------
+# ---------------- OpenAI Setup ----------------
+openai_api_key = os.getenv("OPENAI_API_KEY", "YOUR_API_KEY_HERE")
+llm_client = OpenAI(api_key=openai_api_key)
+
+# ---------------- Helpers ----------------
 def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
@@ -91,13 +97,11 @@ def dynamic_suggestions(disease, risk_level, symptoms, risk_prob=0.2):
 def save_report(report_entry):
     try:
         user_id = report_entry.get("user_id")
-        # Ensure user_id is stored as ObjectId if it's not "guest" and is a valid ID string
         if user_id and isinstance(user_id, str) and user_id != "guest":
             try:
                 report_entry["user_id"] = ObjectId(user_id)
             except:
-                # If conversion fails, keep it as string (e.g., for non-standard IDs)
-                pass 
+                pass
         
         suggestion = report_entry.get("suggestion")
         if isinstance(suggestion, dict):
@@ -120,11 +124,9 @@ def serialize_report(report):
     report_copy = report.copy()
     report_copy["_id"] = str(report_copy["_id"])
     
-    # Ensure user_id is a string for client consumption
     if isinstance(report_copy.get("user_id"), ObjectId):
         report_copy["user_id"] = str(report_copy["user_id"])
     
-    # Re-package suggestion for frontend consistency
     if "suggestion_full" in report_copy:
         report_copy["suggestion"] = report_copy["suggestion_full"]
     elif "suggestion_summary" in report_copy:
@@ -134,9 +136,11 @@ def serialize_report(report):
             "Risk Level": report_copy.get("risk_level", "Unknown"),
             "Risk Probability": report_copy.get("risk_probability", 0)
         }
+    if "llm_suggestion" not in report_copy:
+        report_copy["llm_suggestion"] = "N/A"
     return report_copy
 
-# ---------------- Load ML Models (Unchanged) ----------------
+# ---------------- Load ML Models ----------------
 FEATURE_NAMES = [
     "anxiety", "bite", "muscle pain", "saliva", "hallucination", 
     "seizure", "respiratory distress", "rash", "paralysis", "headache", 
@@ -157,6 +161,20 @@ SYNONYM_MAP = {
     "sore throat": "cough", "throat pain": "cough"
 }
 
+# Simple symptom-to-general-disease mapping
+SINGLE_SYMPTOM_FALLBACK = {
+    "fever": "Viral / Non-Zoonotic",
+    "cough": "Viral / Non-Zoonotic",
+    "cold": "Viral / Non-Zoonotic",
+    "headache": "Viral / Non-Zoonotic",
+    "nausea": "Viral / Non-Zoonotic",
+    "vomiting": "Viral / Non-Zoonotic",
+    "joint pain": "Viral / Non-Zoonotic",
+    "rash": "Viral / Non-Zoonotic",
+    "diarrhea": "Viral / Non-Zoonotic"
+}
+
+
 xgb_model = None
 label_encoder = None
 
@@ -167,7 +185,7 @@ try:
 except Exception as e:
     print(f"⚠️ Warning: Could not load ML models - {e}. Symptom prediction will fail.")
 
-# ---------------- Auth Routes (Unchanged) ----------------
+# ---------------- Auth Routes ----------------
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
@@ -302,7 +320,7 @@ def upload_file():
         if os.path.exists(file_path):
             os.remove(file_path)
 
-# ---------------- Predict Symptoms (Unchanged) ----------------
+# ---------------- Predict Symptoms ----------------
 @app.route("/predict_symptoms", methods=["POST"])
 def predict_symptoms():
     if xgb_model is None or label_encoder is None:
@@ -319,8 +337,64 @@ def predict_symptoms():
     else:
         return jsonify({"error": "Symptoms must be a string or list"}), 400
 
+    # Normalize using your synonyms
     normalized_symptoms = [SYNONYM_MAP.get(s, s) for s in input_symptoms]
 
+    # --- Single symptom fallback ---
+    SINGLE_SYMPTOM_FALLBACK = {
+        "fever": "Viral / Non-Zoonotic",
+        "cough": "Viral / Non-Zoonotic",
+        "cold": "Viral / Non-Zoonotic",
+        "headache": "Viral / Non-Zoonotic",
+        "nausea": "Viral / Non-Zoonotic",
+        "vomiting": "Viral / Non-Zoonotic",
+        "joint pain": "Viral / Non-Zoonotic",
+        "rash": "Viral / Non-Zoonotic",
+        "diarrhea": "Viral / Non-Zoonotic"
+    }
+
+    if len(normalized_symptoms) == 1 and normalized_symptoms[0] in SINGLE_SYMPTOM_FALLBACK:
+        disease = SINGLE_SYMPTOM_FALLBACK[normalized_symptoms[0]]
+        confidence = 90  # high confidence for fallback
+        risk_level = "Low"
+        matched_symptoms = normalized_symptoms
+
+        suggestion_object = dynamic_suggestions(
+            disease=disease,
+            risk_level=risk_level,
+            symptoms=matched_symptoms,
+            risk_prob=confidence/100
+        )
+
+        llm_suggestion = f"Based on the symptom '{normalized_symptoms[0]}', it is likely a {disease}. Monitor symptoms and consult a doctor if they worsen."
+
+        report_entry = {
+            "user_id": user_id,
+            "disease": disease,
+            "result": f"ML Risk: {risk_level}",
+            "symptoms_reported": ", ".join(input_symptoms),
+            "matched_symptoms": matched_symptoms,
+            "confidence": confidence,
+            "suggestion": suggestion_object,
+            "llm_suggestion": llm_suggestion,
+            "created_at": datetime.utcnow(),
+            "source": "fallback-single-symptom"
+        }
+
+        inserted_id = save_report(report_entry)
+
+        return jsonify({
+            "disease": disease,
+            "confidence": confidence,
+            "matched_symptoms": matched_symptoms,
+            "suggestion": suggestion_object,
+            "llm_suggestion": llm_suggestion,
+            "result": f"ML Risk: {risk_level}",
+            "_id": inserted_id,
+            "user_id": user_id
+        })
+
+    # --- ML Prediction for multiple symptoms ---
     feature_vector = [1 if f in normalized_symptoms else 0 for f in FEATURE_NAMES]
     X = pd.DataFrame([feature_vector], columns=FEATURE_NAMES)
 
@@ -346,6 +420,26 @@ def predict_symptoms():
         risk_prob=(confidence / 100)
     )
 
+    # ✅ LLM suggestion
+    try:
+        prompt = f"""
+        You are an AI medical assistant specialized in zoonotic diseases.
+        Patient shows symptoms: {', '.join(matched_symptoms) if matched_symptoms else 'No major symptoms reported'}.
+        Detected disease: {disease}.
+        Risk level: {risk_level}.
+        Confidence: {confidence}%.
+        Provide 3 safe and helpful health suggestions (avoid medication or prescriptions).
+        """
+        llm_response = llm_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7,
+            max_tokens=200
+        )
+        llm_suggestion = llm_response.choices[0].message.content.strip()
+    except Exception as e:
+        llm_suggestion = "LLM suggestion unavailable due to API error."
+
     report_entry = {
         "user_id": user_id,
         "disease": disease,
@@ -354,6 +448,7 @@ def predict_symptoms():
         "matched_symptoms": matched_symptoms,
         "confidence": confidence,
         "suggestion": suggestion_object,
+        "llm_suggestion": llm_suggestion,
         "created_at": datetime.utcnow(),
         "source": "ml-symptoms-structured"
     }
@@ -365,12 +460,14 @@ def predict_symptoms():
         "confidence": confidence,
         "matched_symptoms": matched_symptoms,
         "suggestion": suggestion_object,
+        "llm_suggestion": llm_suggestion,
         "result": f"ML Risk: {risk_level}",
         "_id": inserted_id,
         "user_id": user_id
     })
 
-# ---------------- Fetch Reports (Unchanged) ----------------
+
+# ---------------- Fetch Reports (Updated with LLM) ----------------
 @app.route("/reports", methods=["GET"])
 def get_reports():
     role = request.args.get("role", "user")
@@ -378,46 +475,78 @@ def get_reports():
 
     try:
         if role == "doctor":
-            # Doctor view: Fetch reports grouped by user
             user_ids_with_reports = reports_collection.distinct("user_id")
             users_list = []
             for uid in user_ids_with_reports:
                 str_uid = str(uid) if isinstance(uid, ObjectId) else uid
-                
-                # Try to find the username
                 user_doc = None
                 if isinstance(uid, ObjectId):
                     user_doc = users_collection.find_one({"_id": uid})
                 elif uid != "guest":
-                    # For cases where user_id might be stored as a string that looks like an ObjectId or another unique string
                     user_doc = users_collection.find_one({"_id": ObjectId(uid)}) if ObjectId.is_valid(uid) else users_collection.find_one({"username": uid})
-
                 username = user_doc["username"] if user_doc else ("Guest User" if uid == "guest" else f"User {str_uid}")
-                
                 reports_cursor = reports_collection.find({"user_id": uid}).sort("created_at", -1)
-                reports = [serialize_report(r) for r in reports_cursor]
+                reports = []
+                for r in reports_cursor:
+                    r_serial = serialize_report(r)
+                    # ✅ If LLM suggestion missing, generate dynamically
+                    if r_serial.get("llm_suggestion") == "N/A":
+                        try:
+                            prompt = f"""
+                            You are an AI medical assistant specialized in zoonotic diseases.
+                            Patient shows symptoms: {', '.join(r_serial.get('matched_symptoms', []))}.
+                            Detected disease: {r_serial.get('disease')}.
+                            Risk level: {r_serial.get('risk_level')}.
+                            Confidence: {r_serial.get('confidence', 0)}%.
+                            Provide 3 safe and helpful health suggestions (avoid medication or prescriptions).
+                            """
+                            llm_response = llm_client.chat.completions.create(
+                                model="gpt-4o-mini",
+                                messages=[{"role": "user", "content": prompt}],
+                                temperature=0.7,
+                                max_tokens=200
+                            )
+                            r_serial["llm_suggestion"] = llm_response.choices[0].message.content.strip()
+                        except:
+                            r_serial["llm_suggestion"] = "LLM suggestion unavailable."
+                    reports.append(r_serial)
                 users_list.append({"user_id": str_uid, "username": username, "reports": reports})
             return jsonify(users_list)
         else:
-            # User view: Fetch reports for a specific user_id
             if not user_id_param:
                 return jsonify({"error": "Missing user_id"}), 400
-            
-            # Prepare query for both ObjectId and string format
             query_options = [user_id_param]
             if user_id_param != "guest":
                 try:
                     query_options.append(ObjectId(user_id_param))
                 except:
                     pass
-            
             reports_cursor = reports_collection.find({"user_id": {"$in": query_options}}).sort("created_at", -1)
-            reports = [serialize_report(r) for r in reports_cursor]
-            
+            reports = []
+            for r in reports_cursor:
+                r_serial = serialize_report(r)
+                if r_serial.get("llm_suggestion") == "N/A":
+                    try:
+                        prompt = f"""
+                        You are an AI medical assistant specialized in zoonotic diseases.
+                        Patient shows symptoms: {', '.join(r_serial.get('matched_symptoms', []))}.
+                        Detected disease: {r_serial.get('disease')}.
+                        Risk level: {r_serial.get('risk_level')}.
+                        Confidence: {r_serial.get('confidence', 0)}%.
+                        Provide 3 safe and helpful health suggestions (avoid medication or prescriptions).
+                        """
+                        llm_response = llm_client.chat.completions.create(
+                            model="gpt-4o-mini",
+                            messages=[{"role": "user", "content": prompt}],
+                            temperature=0.7,
+                            max_tokens=200
+                        )
+                        r_serial["llm_suggestion"] = llm_response.choices[0].message.content.strip()
+                    except:
+                        r_serial["llm_suggestion"] = "LLM suggestion unavailable."
+                reports.append(r_serial)
             return jsonify(reports)
-            
     except Exception as e:
-        # In a real app, log the error (print/logging module)
         print(f"Error fetching reports: {e}")
         return jsonify({"error": "Failed to fetch reports. " + str(e)}), 500
 
