@@ -15,7 +15,7 @@
     --warning-color: #FFC107;
     --shadow-light: 0 8px 30px rgba(0, 0, 0, 0.05);
     --shadow-dark: 0 8px 30px rgba(0, 0, 0, 0.4);
-    --gradient-accent: linear-gradient(135deg, #00bcd4, #0097a7);
+    --gradient-accent: linear-gradient(135deg, #00bcd4, #8ac4cb);
 }
 
 /* --- Base Page --- */
@@ -40,7 +40,7 @@
     font-size: 2.4em;
     font-weight: 900;
     background: var(--gradient-accent);
-
+    -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-transform: uppercase;
     letter-spacing: 1px;
