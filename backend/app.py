@@ -3,15 +3,31 @@ import re
 import pytesseract
 import fitz
 import random
-from datetime import datetime
+from datetime import datetime, timedelta # Updated import
 from PIL import Image
-from flask import Flask, request, jsonify
+# 💡 REQUIRED IMPORTS FOR PDF GENERATION AND FLASK RESPONSE
+from flask import Flask, request, jsonify, make_response 
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from werkzeug.security import generate_password_hash, check_password_hash
 from pymongo import MongoClient
-from bson import ObjectId, json_util  # Import json_util for robust ObjectId handling
-from openai import OpenAI  # ✅ LLM integration
+from bson import ObjectId, json_util 
+from openai import OpenAI 
+from openai import APIError # 💡 ADDED for specific LLM error handling
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from flask import send_file
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
+from io import BytesIO
+import datetime
+import ast
+from bson.errors import InvalidId # 💡 ADDED for MongoDB ID error handling
+
+# PDF Generation Library
+from weasyprint import HTML 
 
 # --- ML Imports ---
 import joblib
@@ -21,7 +37,6 @@ import warnings
 warnings.filterwarnings("ignore", category=UserWarning)
 
 # --- Rule-Based Logic (Unchanged) ---
-
 SYMPTOM_DISEASE_MAP = {
     "Rabies": {"anxiety": 1, "bite": 2, "saliva": 1, "hallucination": 1, "paralysis": 1, "hydrophobia": 2, "agitation": 1},
     "Nipah": {"fever": 1, "headache": 1, "seizure": 1, "respiratory distress": 2, "encephalitis": 2, "confusion": 1, "cough": 1, "vomiting": 1},
@@ -36,6 +51,8 @@ UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "pdf"}
+STATIC_DIR = os.path.join(os.path.abspath(os.path.dirname(__file__)), "static")
+os.makedirs(STATIC_DIR, exist_ok=True) # Ensure static directory exists for PDF logo
 
 # ---------------- MongoDB ----------------
 MONGO_URI = "mongodb://localhost:27017"
@@ -52,6 +69,15 @@ reports_collection.create_index("user_id")
 # ---------------- OpenAI Setup ----------------
 openai_api_key = os.getenv("OPENAI_API_KEY", "YOUR_API_KEY_HERE")
 llm_client = OpenAI(api_key=openai_api_key)
+
+# 💡 CORRECTION: Add an explicit check for the placeholder key
+if openai_api_key == "YOUR_API_KEY_HERE":
+    print("\n" + "="*80)
+    print("FATAL ERROR: OPENAI_API_KEY is not set.")
+    print("Please set the environment variable or replace 'YOUR_API_KEY_HERE' in app.py.")
+    print("LLM suggestions will fail until this is fixed.")
+    print("="*80 + "\n")
+
 
 # ---------------- Helpers ----------------
 def allowed_file(filename):
@@ -79,9 +105,27 @@ def dynamic_suggestions(disease, risk_level, symptoms, risk_prob=0.2):
         return {"AI Suggestion": selected, "Reasoning": reasoning, "Risk Level": "Low", "Risk Probability": 0.0}
 
     pool = {
-        "High": ["Seek immediate medical attention", "Isolate yourself and restrict animal contact", "Monitor symptoms closely (e.g., neurological changes)"],
-        "Moderate": ["Consult healthcare professional for further testing", "Monitor symptoms daily", "Stay hydrated"],
-        "Low": ["Monitor your symptoms for progression", "Maintain hygiene and avoid contact with animals", "Rest adequately"]
+        "High": [
+        "Seek **immediate medical attention** and emergency care.",
+        "**Isolate yourself** immediately and strictly **restrict all animal contact**.",
+        "Monitor symptoms closely, especially neurological changes, extreme fatigue, or breathing difficulties.",
+        "Inform healthcare providers immediately about recent **animal exposure or travel history**.",
+        "Prepare documentation of your symptoms, exposure, and medical history for emergency personnel."
+    ],
+    "Moderate": [
+        "**Consult a healthcare professional** or epidemiologist for further testing within 24-48 hours.",
+        "**Monitor symptoms daily**, noting any progression or new developments.",
+        "Stay hydrated and ensure adequate rest to support your immune system.",
+        "Practice **enhanced hygiene** (e.g., thorough handwashing) to prevent secondary spread.",
+        "Limit close contact with vulnerable individuals (e.g., the elderly, young children)."
+    ],
+    "Low": [
+        "Continue to **monitor your symptoms** for progression over the next 72 hours.",
+        "**Maintain strict hygiene** and avoid direct contact with wild or unfamiliar animals.",
+        "Ensure **adequate rest** and a balanced diet.",
+        "Consider over-the-counter remedies for mild symptoms (e.g., fever, headache).",
+        "If symptoms worsen, **consult a general practitioner**."
+    ]
     }
     
     suggestion_pool = pool.get(risk_level, pool["Low"])
@@ -99,9 +143,11 @@ def save_report(report_entry):
         user_id = report_entry.get("user_id")
         if user_id and isinstance(user_id, str) and user_id != "guest":
             try:
+                # Store as ObjectId if valid, otherwise keep string (e.g., "guest" or an invalid ID string)
                 report_entry["user_id"] = ObjectId(user_id)
-            except:
-                pass
+            except InvalidId:
+                # 💡 IMPROVEMENT: Catch specific error but still keep original string if it's not a valid ObjectId
+                pass 
         
         suggestion = report_entry.get("suggestion")
         if isinstance(suggestion, dict):
@@ -124,14 +170,17 @@ def serialize_report(report):
     report_copy = report.copy()
     report_copy["_id"] = str(report_copy["_id"])
     
+    # Ensure user_id is a string for frontend display
     if isinstance(report_copy.get("user_id"), ObjectId):
         report_copy["user_id"] = str(report_copy["user_id"])
     
+    # Re-package the structured suggestion from the stored fields
     if "suggestion_full" in report_copy:
         report_copy["suggestion"] = report_copy["suggestion_full"]
     elif "suggestion_summary" in report_copy:
+        # Reconstruct the dict for consistency if only summary exists
         report_copy["suggestion"] = {
-            "AI Suggestion": [],
+            "AI Suggestion": report_copy["suggestion_summary"].split("Advice: ", 1)[-1].split(', ') if "Advice: " in report_copy["suggestion_summary"] else [report_copy["suggestion_summary"]],
             "Reasoning": [report_copy["suggestion_summary"]],
             "Risk Level": report_copy.get("risk_level", "Unknown"),
             "Risk Probability": report_copy.get("risk_probability", 0)
@@ -161,7 +210,7 @@ SYNONYM_MAP = {
     "sore throat": "cough", "throat pain": "cough"
 }
 
-# Simple symptom-to-general-disease mapping
+# Simple symptom-to-general-disease mapping (used in fallback)
 SINGLE_SYMPTOM_FALLBACK = {
     "fever": "Viral / Non-Zoonotic",
     "cough": "Viral / Non-Zoonotic",
@@ -196,6 +245,13 @@ def register():
     if not username or not password:
         return jsonify({"success": False, "message": "Username and password required"}), 400
 
+    # 💡 CORRECTION: Basic input validation
+    username = username.strip()
+    if len(password) < 8:
+        return jsonify({"success": False, "message": "Password must be at least 8 characters long."}), 400
+    if not re.match(r"^[a-zA-Z0-9._-]+$", username):
+        return jsonify({"success": False, "message": "Username can only contain letters, numbers, dots, hyphens, and underscores."}), 400
+
     if users_collection.find_one({"username": username}):
         return jsonify({"success": False, "message": "Username already exists"}), 400
 
@@ -223,7 +279,8 @@ def login():
         })
     return jsonify({"success": False, "message": "Invalid username, password, or role"}), 401
 
-# ---------------- File Upload / OCR (Unchanged) ----------------
+# ---------------- File Upload / OCR (Unchanged logic, see original code for lines 257-313) ----------------
+# ... (File Upload / OCR code is unchanged, retained below) ...
 @app.route("/upload", methods=["POST"])
 def upload_file():
     user_id = request.form.get("user_id")
@@ -286,6 +343,8 @@ def upload_file():
             symptoms=[],
             risk_prob=1.0
         )
+        
+        llm_suggestion = "N/A" # LLM is not typically run for OCR results unless triggered later
 
         report_entry = {
             "user_id": user_id,
@@ -294,8 +353,9 @@ def upload_file():
             "ct_values": ct_values if ct_values else "N/A",
             "ct_value": ", ".join([f"{g}: {v}" for g, v in ct_values.items()]) if ct_values else "N/A",
             "suggestion": suggestion,
+            "llm_suggestion": llm_suggestion,
             "raw_text": text,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.datetime.utcnow(),
             "source": "upload"
         }
 
@@ -341,21 +401,9 @@ def predict_symptoms():
     normalized_symptoms = [SYNONYM_MAP.get(s, s) for s in input_symptoms]
 
     # --- Single symptom fallback ---
-    SINGLE_SYMPTOM_FALLBACK = {
-        "fever": "Viral / Non-Zoonotic",
-        "cough": "Viral / Non-Zoonotic",
-        "cold": "Viral / Non-Zoonotic",
-        "headache": "Viral / Non-Zoonotic",
-        "nausea": "Viral / Non-Zoonotic",
-        "vomiting": "Viral / Non-Zoonotic",
-        "joint pain": "Viral / Non-Zoonotic",
-        "rash": "Viral / Non-Zoonotic",
-        "diarrhea": "Viral / Non-Zoonotic"
-    }
-
     if len(normalized_symptoms) == 1 and normalized_symptoms[0] in SINGLE_SYMPTOM_FALLBACK:
         disease = SINGLE_SYMPTOM_FALLBACK[normalized_symptoms[0]]
-        confidence = 90  # high confidence for fallback
+        confidence = 90 
         risk_level = "Low"
         matched_symptoms = normalized_symptoms
 
@@ -366,7 +414,7 @@ def predict_symptoms():
             risk_prob=confidence/100
         )
 
-        llm_suggestion = f"Based on the symptom '{normalized_symptoms[0]}', it is likely a {disease}. Monitor symptoms and consult a doctor if they worsen."
+        llm_suggestion = f"Based on the single symptom '{normalized_symptoms[0]}', it is likely a {disease}. Monitor symptoms and consult a doctor if they worsen. Stay well-hydrated and rest."
 
         report_entry = {
             "user_id": user_id,
@@ -377,7 +425,7 @@ def predict_symptoms():
             "confidence": confidence,
             "suggestion": suggestion_object,
             "llm_suggestion": llm_suggestion,
-            "created_at": datetime.utcnow(),
+            "created_at": datetime.datetime.utcnow(),
             "source": "fallback-single-symptom"
         }
 
@@ -437,8 +485,13 @@ def predict_symptoms():
             max_tokens=200
         )
         llm_suggestion = llm_response.choices[0].message.content.strip()
-    except Exception as e:
+    except APIError as e: # 💡 CORRECTION: Catch specific API error and log it
+        print(f"❌ LLM API Error (predict_symptoms): OpenAI API call failed with error: {e}") 
         llm_suggestion = "LLM suggestion unavailable due to API error."
+    except Exception as e:
+        print(f"❌ LLM General Error (predict_symptoms): {e}") 
+        llm_suggestion = "LLM suggestion unavailable due to a general error."
+
 
     report_entry = {
         "user_id": user_id,
@@ -449,7 +502,7 @@ def predict_symptoms():
         "confidence": confidence,
         "suggestion": suggestion_object,
         "llm_suggestion": llm_suggestion,
-        "created_at": datetime.utcnow(),
+        "created_at": datetime.datetime.utcnow(),
         "source": "ml-symptoms-structured"
     }
 
@@ -467,13 +520,47 @@ def predict_symptoms():
     })
 
 
-# ---------------- Fetch Reports (Updated with LLM) ----------------
+# ---------------- Fetch Reports ----------------
 @app.route("/reports", methods=["GET"])
 def get_reports():
     role = request.args.get("role", "user")
     user_id_param = request.args.get("user_id")
 
     try:
+        # Define the process to backfill/check LLM suggestion
+        def backfill_llm_suggestion(r_serial):
+            if r_serial.get("llm_suggestion") == "N/A":
+                try:
+                    prompt = f"""
+                    You are an AI medical assistant specialized in zoonotic diseases.
+                    Patient shows symptoms: {', '.join(r_serial.get('matched_symptoms', []))}.
+                    Detected disease: {r_serial.get('disease')}.
+                    Risk level: {r_serial.get('risk_level')}.
+                    Confidence: {r_serial.get('confidence', 0)}%.
+                    Provide 3 safe and helpful health suggestions (avoid medication or prescriptions).
+                    """
+                    llm_response = llm_client.chat.completions.create(
+                        model="gpt-4o-mini",
+                        messages=[{"role": "user", "content": prompt}],
+                        temperature=0.7,
+                        max_tokens=200
+                    )
+                    llm_suggestion = llm_response.choices[0].message.content.strip()
+                    r_serial["llm_suggestion"] = llm_suggestion
+                    # Update the report in MongoDB
+                    reports_collection.update_one(
+                        {"_id": ObjectId(r_serial["_id"])},
+                        {"$set": {"llm_suggestion": llm_suggestion}}
+                    )
+                except APIError as e: # 💡 CORRECTION: Catch specific API error and log it
+                    print(f"❌ LLM API Error (reports backfill): OpenAI API call failed with error: {e}") 
+                    r_serial["llm_suggestion"] = "LLM suggestion unavailable due to API error."
+                except Exception as e:
+                    print(f"❌ LLM General Error (reports backfill): {e}") 
+                    r_serial["llm_suggestion"] = "LLM suggestion unavailable due to a general error."
+            return r_serial
+        
+        # Doctor role logic
         if role == "doctor":
             user_ids_with_reports = reports_collection.distinct("user_id")
             users_list = []
@@ -483,35 +570,22 @@ def get_reports():
                 if isinstance(uid, ObjectId):
                     user_doc = users_collection.find_one({"_id": uid})
                 elif uid != "guest":
-                    user_doc = users_collection.find_one({"_id": ObjectId(uid)}) if ObjectId.is_valid(uid) else users_collection.find_one({"username": uid})
+                    try:
+                        user_doc = users_collection.find_one({"_id": ObjectId(uid)})
+                    except InvalidId:
+                        pass
+                
                 username = user_doc["username"] if user_doc else ("Guest User" if uid == "guest" else f"User {str_uid}")
                 reports_cursor = reports_collection.find({"user_id": uid}).sort("created_at", -1)
                 reports = []
                 for r in reports_cursor:
                     r_serial = serialize_report(r)
-                    # ✅ If LLM suggestion missing, generate dynamically
-                    if r_serial.get("llm_suggestion") == "N/A":
-                        try:
-                            prompt = f"""
-                            You are an AI medical assistant specialized in zoonotic diseases.
-                            Patient shows symptoms: {', '.join(r_serial.get('matched_symptoms', []))}.
-                            Detected disease: {r_serial.get('disease')}.
-                            Risk level: {r_serial.get('risk_level')}.
-                            Confidence: {r_serial.get('confidence', 0)}%.
-                            Provide 3 safe and helpful health suggestions (avoid medication or prescriptions).
-                            """
-                            llm_response = llm_client.chat.completions.create(
-                                model="gpt-4o-mini",
-                                messages=[{"role": "user", "content": prompt}],
-                                temperature=0.7,
-                                max_tokens=200
-                            )
-                            r_serial["llm_suggestion"] = llm_response.choices[0].message.content.strip()
-                        except:
-                            r_serial["llm_suggestion"] = "LLM suggestion unavailable."
+                    r_serial = backfill_llm_suggestion(r_serial) # Backfill attempt
                     reports.append(r_serial)
                 users_list.append({"user_id": str_uid, "username": username, "reports": reports})
             return jsonify(users_list)
+        
+        # User role logic
         else:
             if not user_id_param:
                 return jsonify({"error": "Missing user_id"}), 400
@@ -519,33 +593,17 @@ def get_reports():
             if user_id_param != "guest":
                 try:
                     query_options.append(ObjectId(user_id_param))
-                except:
+                except InvalidId:
                     pass
+                
             reports_cursor = reports_collection.find({"user_id": {"$in": query_options}}).sort("created_at", -1)
             reports = []
             for r in reports_cursor:
                 r_serial = serialize_report(r)
-                if r_serial.get("llm_suggestion") == "N/A":
-                    try:
-                        prompt = f"""
-                        You are an AI medical assistant specialized in zoonotic diseases.
-                        Patient shows symptoms: {', '.join(r_serial.get('matched_symptoms', []))}.
-                        Detected disease: {r_serial.get('disease')}.
-                        Risk level: {r_serial.get('risk_level')}.
-                        Confidence: {r_serial.get('confidence', 0)}%.
-                        Provide 3 safe and helpful health suggestions (avoid medication or prescriptions).
-                        """
-                        llm_response = llm_client.chat.completions.create(
-                            model="gpt-4o-mini",
-                            messages=[{"role": "user", "content": prompt}],
-                            temperature=0.7,
-                            max_tokens=200
-                        )
-                        r_serial["llm_suggestion"] = llm_response.choices[0].message.content.strip()
-                    except:
-                        r_serial["llm_suggestion"] = "LLM suggestion unavailable."
+                r_serial = backfill_llm_suggestion(r_serial) # Backfill attempt
                 reports.append(r_serial)
             return jsonify(reports)
+            
     except Exception as e:
         print(f"Error fetching reports: {e}")
         return jsonify({"error": "Failed to fetch reports. " + str(e)}), 500
@@ -559,19 +617,15 @@ def delete_reports_by_user():
         return jsonify({"success": False, "message": "Missing user_id in query parameter."}), 400
 
     try:
-        # --- CRITICAL CHANGE: Query for both possible data types ---
-        
-        # 1. Start with the plain string ID (e.g., "guest" or an ID stored as string)
+        # CRITICAL CHANGE: Query for both possible data types
         query_options = [user_id]
         
-        # 2. Add the ObjectId version if the string is a valid ObjectId format
         if user_id != "guest":
             try:
                 query_options.append(ObjectId(user_id))
-            except:
-                pass # Not a valid ObjectId string, proceed with just the string
+            except InvalidId:
+                pass 
         
-        # Create the MongoDB $in query to match either string or ObjectId format
         delete_query = {"user_id": {"$in": query_options}}
         
         result = reports_collection.delete_many(delete_query)
@@ -582,7 +636,7 @@ def delete_reports_by_user():
         print(f"Error during report deletion: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
-# ---------------- Clear All Reports for Doctor (Unchanged) ----------------
+# ---------------- Clear All Reports for Doctor ----------------
 @app.route("/doctor/clear_all_reports", methods=["DELETE"])
 def doctor_clear_all_reports():
     try:
@@ -594,7 +648,7 @@ def doctor_clear_all_reports():
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
         
-# ---------------- Global Data Clear Route (Unchanged) ----------------
+# ---------------- Global Data Clear Route ----------------
 @app.route("/admin/clear_all_data", methods=["DELETE"])
 def clear_all_reports_global():
     try:
@@ -607,6 +661,142 @@ def clear_all_reports_global():
     except Exception as e:
         print(f"Error during global data clear: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
+
+
+# ---------------- Report Download (JSON or PDF) ----------------
+@app.route('/download_report/<report_id>', methods=['GET'])
+def download_report(report_id):
+    try:
+        # Fetch report by its _id
+        report_doc = reports_collection.find_one({'_id': ObjectId(report_id)})
+        if not report_doc:
+            return jsonify({"error": "Report not found"}), 404
+        
+        # Use serialize_report to process the fetched document
+        report = serialize_report(report_doc)
+        
+        # 💡 CORRECTION/IMPROVEMENT: Extract the suggestion list and LLM suggestion correctly
+        llm_suggestion_text = report.get('llm_suggestion', 'No LLM advice available.')
+        
+        suggestion_data = report.get('suggestion', {})
+        ai_suggestion_list = []
+
+        if isinstance(suggestion_data, dict) and 'AI Suggestion' in suggestion_data:
+            ai_suggestion_list = suggestion_data['AI Suggestion']
+            if not isinstance(ai_suggestion_list, list): 
+                ai_suggestion_list = [str(ai_suggestion_list)]
+        else:
+             # Fallback: attempt to get it from the summary if structured data is missing
+            summary = report.get('suggestion_summary', 'No model-based suggestion available.')
+            if "Advice: " in summary:
+                advice_part = summary.split("Advice: ", 1)[-1]
+                ai_suggestion_list = [s.strip() for s in advice_part.split(',') if s.strip()]
+            else:
+                 ai_suggestion_list = [summary]
+        
+        # Create PDF in memory
+        buffer = BytesIO()
+        
+        # Use a placeholder path if the actual logo file isn't present
+        logo_path_rel = "static/logo.png" 
+        logo_path_abs = os.path.join(os.path.abspath(os.path.dirname(__file__)), logo_path_rel)
+        logo_tag = f'<img src="file://{logo_path_abs}" style="width: 80px; height: 80px; margin-bottom: 10px;" alt="Logo">'
+        
+        # Format report data for the HTML table
+        report_data = []
+        for key, value in report.items():
+            if key in ["_id", "suggestion_full", "risk_level", "risk_probability", "suggestion", "raw_text", "llm_suggestion"]: # Exclude LLM here
+                continue
+            
+            display_key = key.replace('_', ' ').capitalize()
+            display_value = ""
+            if isinstance(value, datetime.datetime):
+                display_value = value.strftime("%Y-%m-%d %H:%M:%S")
+            elif isinstance(value, (dict, list)):
+                display_value = str(value).replace("[", "").replace("]", "").replace("{", "").replace("}", "")
+            else:
+                display_value = str(value)
+                
+            report_data.append(f"""
+                <tr>
+                    <td style="font-weight: bold;">{display_key}</td>
+                    <td>{display_value}</td>
+                </tr>
+            """)
+        
+        
+        # Create HTML content for WeasyPrint
+        html_content = f"""
+        <html>
+        <head>
+            <style>
+                @page {{ size: A4; margin: 1cm; }}
+                body {{ font-family: sans-serif; color: #333; }}
+                .logo {{ text-align: center; }}
+                h1 {{ color: #0B3954; font-size: 24px; text-align: center; margin-bottom: 5px; }}
+                h2 {{ color: #0B3954; font-size: 16px; margin-top: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }}
+                .subtitle {{ text-align: center; color: #666; margin-top: 0; margin-bottom: 20px; font-size: 12px; }}
+                table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; }}
+                th, td {{ border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 11px; }}
+                th {{ background-color: #0B3954; color: white; }}
+                .ai-box {{ border: 1px solid #0B3954; background-color: #E8F1F2; padding: 15px; margin-top: 10px; }}
+                .llm-box {{ border: 1px solid #0B5439; background-color: #F0FFF0; padding: 15px; margin-top: 10px; }}
+                .ai-box p, .llm-box p {{ margin: 0 0 5px 0; font-weight: bold; }}
+                .ai-box ul, .llm-box ul {{ list-style: disc; margin: 5px 0 0 20px; padding: 0; }}
+                .ai-box li, .llm-box li {{ margin-bottom: 5px; font-weight: normal; }}
+            </style>
+        </head>
+        <body>
+            <div class="logo">{logo_tag if os.path.exists(logo_path_abs) else '<h2>Zoonotic AI</h2>'}</div>
+            <h1>Zoonotic Disease AI Report</h1>
+            <p class="subtitle">Report ID: {report_id} | Generated by AI-based Detection System</p>
+
+            <h2>Core Report Details</h2>
+            <table>
+                <thead>
+                    <tr><th style="width:30%;">Field</th><th>Value</th></tr>
+                </thead>
+                <tbody>
+                    {''.join(report_data)}
+                </tbody>
+            </table>
+            
+            <h2>Suggestions</h2>
+            
+            <div class="ai-box">
+                <p>AI Based Suggestions:</p>
+                <ul>
+                    {'\n'.join([f"<li>{s}</li>" for s in ai_suggestion_list])}
+                    {len(ai_suggestion_list) == 0 and '<li>No model-based suggestion available.</li>'}
+                </ul>
+            </div>
+            
+            <div class="llm-box">
+                <p>Health Advice:</p>
+                <p style="font-weight: normal;">{llm_suggestion_text}</p>
+            </div>
+            
+            <p style="text-align: right; font-size: 10px; color: #999; margin-top: 40px;">
+                Report generated on {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            </p>
+        </body>
+        </html>
+        """
+
+        # Convert HTML to PDF using WeasyPrint
+        html = HTML(string=html_content)
+        pdf_bytes = html.write_pdf(target=buffer)
+        buffer.seek(0)
+
+        # Return the generated PDF
+        response = make_response(buffer.getvalue())
+        response.headers['Content-Type'] = 'application/pdf'
+        response.headers['Content-Disposition'] = f'attachment; filename=AI_Report_{report_id}.pdf'
+        return response
+
+    except Exception as e:
+        print(f"Error during PDF generation: {e}")
+        return jsonify({"error": f"Failed to generate PDF: {str(e)}"}), 500
 
 # ---------------- Run App ----------------
 if __name__ == "__main__":
