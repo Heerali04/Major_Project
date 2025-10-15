@@ -1,0 +1,261 @@
+/* --- CSS Variables (Design Tokens) --- */
+:root {
+    /* Colors */
+    --clr-primary: #00bcd4;
+    --clr-primary-dark: #0097a7;
+    --clr-bg-light: #f9f9fb;        /* Page background (Light mode) */
+    --clr-card-bg: #ffffff;         /* Card background (Light mode) */
+    --clr-text-main: #1a2a40;       /* Dark Navy (Light mode headings) */
+    --clr-text-body: #5f6c7b;       /* Muted Gray (Light mode body) */
+    --clr-border: #e6e9ed;          /* Card border (Light mode) */
+    
+    /* Dark Mode variables will be overwritten here */
+    --dm-bg: #1a2a40;               /* Dark Mode Background */
+    --dm-card-bg: #2d3748;          /* Dark Mode Card Background */
+    --dm-text-main: #e2e8f0;        /* Light Text for Headings */
+    --dm-text-body: #a0aec0;        /* Muted Light Text for Body */
+    --dm-border: #4a5568;           /* Dark Mode Border */
+
+    /* Spacing & Radius, Transitions & Shadows (remain the same) */
+    --space-lg: 3rem;
+    --space-md: 2rem;
+    --radius-pill: 9999px;
+    --radius-card: 16px;
+    --transition-speed: 0.35s ease;
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 12px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Dark Mode Overrides (Apply this class to the body or main component) --- */
+.dark {
+    --clr-bg-light: var(--dm-bg);
+    --clr-card-bg: var(--dm-card-bg);
+    --clr-text-main: var(--dm-text-main);
+    --clr-text-body: var(--dm-text-body);
+    --clr-border: var(--dm-border);
+    /* Soften the shadows in dark mode */
+    --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.4);
+    --shadow-hover: 0 12px 25px rgba(0, 0, 0, 0.5);
+}
+
+/* --- Keyframes (Smoother Animations) --- */
+/* (Unchanged from original) */
+@keyframes typing { from { width: 0; } to { width: 100%; } }
+@keyframes blink-caret { from, to { border-color: transparent; } 50% { border-color: var(--clr-primary); } }
+@keyframes float-animation { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+
+/* --- Global Page Container --- */
+.home-page {
+    width: 100%;
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center; 
+    /* USE VARIABLES FOR BACKGROUND AND TEXT */
+    background-color: var(--clr-bg-light); 
+    padding: 3rem 1rem; 
+    overflow-x: hidden;
+    overflow-y: auto; 
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    /* IMPORTANT: Add transition for smooth theme switching */
+    transition: background-color var(--transition-speed); 
+}
+
+/* ---------------------------------- */
+/* --- 1. Hero Section (Header) --- */
+/* ---------------------------------- */
+
+.hero-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4rem;
+    max-width: 1200px;
+    width: 100%;
+    margin-bottom: var(--space-lg);
+}
+
+.hero-text {
+    flex: 1.2;
+    padding-right: 2rem;
+}
+
+.hero-text h1 {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 900;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    /* USE VARIABLE FOR COLOR */
+    color: var(--clr-text-main);
+    /* Ensure blink-caret uses the primary color */
+    border-right: .07em solid var(--clr-primary); 
+    white-space: nowrap;
+    animation: typing 2.5s steps(30, end), blink-caret .75s step-end infinite;
+}
+
+.hero-text h1 span {
+    color: var(--clr-primary);
+}
+
+.hero-text p {
+    font-size: clamp(1rem, 2vw, 1.2rem); 
+    /* USE VARIABLE FOR COLOR */
+    color: var(--clr-text-body);
+    line-height: 1.6;
+    margin-bottom: var(--space-md);
+}
+
+/* --- Call to Action Button (CTA) --- */
+.hero-cta {
+    display: inline-block;
+    padding: 1rem 2.5rem;
+    background-color: var(--clr-primary);
+    color: white;
+    text-decoration: none;
+    font-weight: 700;
+    border-radius: var(--radius-pill);
+    box-shadow: 0 8px 20px rgba(0, 188, 212, 0.4);
+    transition: all var(--transition-speed);
+    letter-spacing: 0.5px;
+}
+
+.hero-cta:hover {
+    background-color: var(--clr-primary-dark);
+    transform: translateY(-4px);
+    /* Shadow remains vibrant regardless of mode */
+    box-shadow: 0 15px 30px rgba(0, 188, 212, 0.6);
+}
+
+/* --- Hero Image --- */
+.hero-image {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-left: 1rem;
+    animation: float-animation 8s ease-in-out infinite; 
+}
+
+.hero-image img {
+    width: 100%;
+    max-width: 450px;
+    height: auto;
+    border-radius: var(--radius-card);
+    /* USE VARIABLE FOR SHADOW */
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); 
+    transition: transform var(--transition-speed);
+}
+/* ADDED: A subtle filter to darken images slightly in dark mode for better visual harmony */
+.dark .hero-image img {
+    filter: brightness(0.85); 
+}
+
+/* ---------------------------------- */
+/* --- 2. Feature Cards Section --- */
+/* ---------------------------------- */
+
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    width: 100%;
+    max-width: 1200px;
+    margin-top: var(--space-lg);
+}
+
+.card-link {
+    text-decoration: none;
+    color: inherit;
+}
+
+.card {
+    padding: 2rem;
+    border-radius: var(--radius-card);
+    /* USE VARIABLE FOR BORDER, BACKGROUND, AND SHADOW */
+    border: 1px solid var(--clr-border);
+    background-color: var(--clr-card-bg);
+    box-shadow: var(--shadow-light);
+    transition: all var(--transition-speed);
+    text-align: left;
+}
+
+.card-link:hover .card {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--clr-primary);
+}
+
+.card .icon {
+    font-size: 2.5rem;
+    color: var(--clr-primary);
+    margin-bottom: 0.75rem;
+}
+
+.card h3 {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    /* USE VARIABLE FOR COLOR */
+    color: var(--clr-text-main);
+}
+
+.card p {
+    font-size: 1rem;
+    /* USE VARIABLE FOR COLOR */
+    color: var(--clr-text-body);
+    line-height: 1.5;
+}
+
+/* ---------------------------------- */
+/* --- 3. Media Queries (Responsive) --- */
+/* ---------------------------------- */
+
+/* (Media queries remain unchanged as they relate to layout, not color) */
+
+@media (max-width: 992px) {
+    .hero-section {
+        flex-direction: column;
+        gap: 3rem;
+    }
+    .hero-text { 
+        text-align: center; 
+        padding-right: 0;
+    }
+    .hero-text h1 { 
+        animation: none; 
+        border-right: none; 
+        white-space: normal;
+        text-align: center;
+    }
+    .hero-cta { margin-top: 1rem; }
+}
+
+@media (max-width: 768px) {
+    .home-page {
+        justify-content: flex-start; 
+        padding-top: 4rem;
+        padding-bottom: 2rem;
+    }
+    .hero-section {
+        margin-bottom: var(--space-md);
+    }
+    .hero-image {
+        flex: 1;
+        max-width: 80%;
+    }
+    .cards-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .hero-text h1 {
+        font-size: 2rem;
+    }
+    .hero-text p {
+        font-size: 1rem;
+    }
+}

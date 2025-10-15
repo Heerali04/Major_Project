@@ -1,0 +1,235 @@
+/* --- Variables (Global) --- */
+:root {
+    --accent-color: #00bcd4;
+    --accent-dark: #0097a7;
+    --bg-light: #f7f9fb;
+    --text-light: #333;
+    --bg-dark: #212121;
+    --text-dark: #e0e0e0;
+    --card-light: rgba(255, 255, 255, 0.7);
+    --card-dark: rgba(40, 40, 40, 0.7);
+    --border-light: rgba(224, 224, 224, 0.5);
+    --border-dark: rgba(85, 85, 85, 0.5);
+    --success-color: #4CAF50;
+    --danger-color: #F44336;
+    --warning-color: #FFC107;
+    --shadow-light: 0 8px 30px rgba(0, 0, 0, 0.05);
+    --shadow-dark: 0 8px 30px rgba(0, 0, 0, 0.4);
+    --gradient-accent: linear-gradient(135deg, #00bcd4, #0097a7);
+}
+
+/* --- Base Page --- */
+.upload-page {
+    padding: 50px 25px;
+    background: linear-gradient(145deg, #e0f7fa, #ffffff);
+    color: var(--text-light);
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+    max-width: 900px;
+    margin: 0 auto;
+    transition: all 0.5s ease;
+}
+
+.upload-page.dark {
+    background: linear-gradient(145deg, #1b1b1b, #2c2c2c);
+    color: var(--text-dark);
+}
+
+/* --- Header --- */
+.upload-page h2 {
+    font-size: 2.4em;
+    font-weight: 900;
+    background: var(--gradient-accent);
+
+    -webkit-text-fill-color: transparent;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 40px;
+}
+
+/* --- Upload Controls (Glassmorphic) --- */
+.upload-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    background: var(--card-light);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 35px;
+    border-radius: 20px;
+    box-shadow: var(--shadow-light);
+    border: 1px solid var(--border-light);
+    margin-bottom: 50px;
+    transition: all 0.4s ease;
+}
+
+.upload-page.dark .upload-controls {
+    background: var(--card-dark);
+    border: 1px solid var(--border-dark);
+    box-shadow: var(--shadow-dark);
+}
+
+/* File Input */
+.upload-controls input[type="file"] {
+    padding: 14px 18px;
+    border-radius: 15px;
+    border: 1px solid rgba(200,200,200,0.4);
+    background: rgba(255,255,255,0.4);
+    color: var(--text-light);
+    font-size: 1em;
+    transition: all 0.3s ease;
+}
+
+.upload-page.dark .upload-controls input[type="file"] {
+    background: rgba(60,60,60,0.4);
+    border: 1px solid rgba(120,120,120,0.5);
+    color: var(--text-dark);
+}
+
+.upload-controls input[type="file"]:focus {
+    outline: none;
+    border: 2px solid var(--accent-color);
+    box-shadow: 0 0 15px rgba(0,188,212,0.3);
+}
+
+/* Upload Button */
+.upload-controls button {
+    padding: 14px 32px;
+    border-radius: 15px;
+    font-size: 1.05em;
+    font-weight: 700;
+    cursor: pointer;
+    border: none;
+    transition: all 0.4s ease;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+/* Primary Upload */
+.upload-controls button:not(:disabled) {
+    background: var(--gradient-accent);
+    color: #fff;
+}
+
+.upload-controls button:hover:not(:disabled) {
+    transform: translateY(-2px) scale(1.03);
+    box-shadow: 0 12px 25px rgba(0,188,212,0.35);
+}
+
+.upload-controls button:disabled {
+    background-color: #bbb;
+    cursor: not-allowed;
+    opacity: 0.6;
+    box-shadow: none;
+}
+
+/* Error Message */
+.upload-controls .error {
+    color: var(--danger-color);
+    background: rgba(244,67,54,0.15);
+    border-left: 6px solid var(--danger-color);
+    border-radius: 12px;
+    padding: 12px 18px;
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* --- Uploaded Reports List (Glassmorphic) --- */
+.uploaded-reports-list {
+    margin-top: 40px;
+}
+
+.uploaded-reports-list .report-card {
+    background: var(--card-light);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border-radius: 20px;
+    padding: 30px 35px;
+    border: 1px solid var(--border-light);
+    box-shadow: var(--shadow-light);
+    margin-bottom: 25px;
+    transition: all 0.4s ease, transform 0.3s ease;
+}
+
+.uploaded-reports-list .report-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.upload-page.dark .uploaded-reports-list .report-card {
+    background: var(--card-dark);
+    border: 1px solid var(--border-dark);
+    box-shadow: var(--shadow-dark);
+}
+
+/* Report Title */
+.report-card h3 {
+    font-size: 1.6em;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: var(--accent-dark);
+    padding-bottom: 10px;
+    border-bottom: 1px dashed var(--border-light);
+}
+
+.upload-page.dark .report-card h3 {
+    color: var(--accent-color);
+    border-bottom-color: var(--border-dark);
+}
+
+/* Paragraphs */
+.report-card p {
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+.report-card strong {
+    font-weight: 700;
+    color: var(--accent-dark);
+    margin-right: 5px;
+}
+
+.upload-page.dark .report-card strong {
+    color: var(--accent-color);
+}
+
+/* Risk Level Box */
+.report-card p:has(strong:contains("Risk Level")) {
+    padding: 12px 18px;
+    border-radius: 12px;
+    font-weight: 700;
+    border-left: 6px solid;
+    background: rgba(0,188,212,0.08);
+    transition: all 0.3s ease;
+}
+
+.report-card p:contains("High") { color: var(--danger-color); border-left-color: var(--danger-color); }
+.report-card p:contains("Medium") { color: var(--warning-color); border-left-color: var(--warning-color); }
+.report-card p:contains("Low") { color: var(--success-color); border-left-color: var(--success-color); }
+
+/* Suggestions & Reasoning */
+.report-card div {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border-light);
+}
+
+.upload-page.dark .report-card div {
+    border-top-color: var(--border-dark);
+}
+
+.report-card ul {
+    list-style: disc outside;
+    padding-left: 24px;
+    margin-top: 12px;
+}
+
+.report-card li {
+    margin-bottom: 6px;
+    font-size: 0.97em;
+    color: #555;
+    transition: color 0.3s ease;
+}
+
+.upload-page.dark .report-card li {
+    color: #ccc;
+}

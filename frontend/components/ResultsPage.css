@@ -1,0 +1,261 @@
+/*
+ * ResultsPage.css
+ * Full Styling for Reports View (User + Doctor)
+ * Supports Light & Dark Mode with Transitions
+ */
+
+/* --------------------------------- */
+/* --- 1. DESIGN TOKENS (Variables) --- */
+/* --------------------------------- */
+:root {
+  /* Light Mode Colors */
+  --clr-primary: #00bcd4;
+  --clr-primary-dark: #0097a7;
+  --clr-danger: #dc3545;
+  --clr-text-dark: #1a2a40;
+  --clr-text-medium: #5f6c7b;
+  --clr-border-light: #e6e9ed;
+  --clr-bg-light: #f9f9fb;
+  --clr-card-bg: #ffffff;
+  --clr-accent: #ff9800;
+
+  /* Dark Mode Colors */
+  --dm-bg: #1a2a40;
+  --dm-card-bg: #2d3748;
+  --dm-text-main: #e2e8f0;
+  --dm-text-body: #a0aec0;
+  --dm-border: #4a5568;
+
+  /* Layout, Shadows, Transitions */
+  --radius-default: 12px;
+  --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.05);
+  --shadow-medium: 0 6px 20px rgba(0, 0, 0, 0.1);
+  --transition-speed: 0.3s ease;
+
+  /* Typography */
+  --fs-heading: 1.6rem;
+  --fs-subheading: 1.2rem;
+  --fs-body: 1rem;
+  --fs-small: 0.875rem;
+  --fw-bold: 600;
+  --fw-medium: 500;
+  --fw-regular: 400;
+}
+
+/* --- Dark Mode Overrides --- */
+.dark {
+  --clr-bg-light: var(--dm-bg);
+  --clr-card-bg: var(--dm-card-bg);
+  --clr-text-dark: var(--dm-text-main);
+  --clr-text-medium: var(--dm-text-body);
+  --clr-border-light: var(--dm-border);
+  --shadow-light: 0 4px 15px rgba(0, 0, 0, 0.25);
+}
+
+/* --------------------------------- */
+/* --- 2. BASE STYLES --- */
+/* --------------------------------- */
+.results-page {
+  background-color: var(--clr-bg-light);
+  color: var(--clr-text-dark);
+  min-height: 100vh;
+  padding: 2rem;
+  transition: background-color var(--transition-speed), color var(--transition-speed);
+}
+
+h2 {
+  font-size: var(--fs-heading);
+  font-weight: var(--fw-bold);
+  color: var(--clr-text-dark);
+  margin-bottom: 0.5rem;
+  transition: color var(--transition-speed);
+}
+
+p {
+  font-size: var(--fs-body);
+  color: var(--clr-text-medium);
+  transition: color var(--transition-speed);
+}
+
+/* --------------------------------- */
+/* --- 3. HEADER SECTION --- */
+/* --------------------------------- */
+.reports-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--clr-border-light);
+  padding-bottom: 0.75rem;
+}
+
+.clear-reports-btn {
+  background-color: var(--clr-danger);
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-default);
+  cursor: pointer;
+  font-weight: var(--fw-medium);
+  transition: all var(--transition-speed);
+}
+
+.clear-reports-btn:hover {
+  background-color: #b02a37;
+}
+
+.clear-reports-btn:disabled {
+  background-color: #c7c7c7;
+  cursor: not-allowed;
+}
+
+/* --------------------------------- */
+/* --- 4. REPORTS LIST & CARD --- */
+/* --------------------------------- */
+.reports-list {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+}
+
+.report-card {
+  background-color: var(--clr-card-bg);
+  border: 1px solid var(--clr-border-light);
+  border-radius: var(--radius-default);
+  box-shadow: var(--shadow-light);
+  padding: 1.5rem;
+  transition: all var(--transition-speed);
+}
+
+.report-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-medium);
+}
+
+/* --------------------------------- */
+/* --- 5. CARD HEADER --- */
+/* --------------------------------- */
+.report-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.report-card-header h3 {
+  font-size: var(--fs-subheading);
+  font-weight: var(--fw-bold);
+  color: var(--clr-text-dark);
+}
+
+.download-pdf-btn {
+  background-color: var(--clr-primary);
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-default);
+  cursor: pointer;
+  font-size: var(--fs-small);
+  transition: background-color var(--transition-speed);
+}
+
+.download-pdf-btn:hover {
+  background-color: var(--clr-primary-dark);
+}
+
+/* --------------------------------- */
+/* --- 6. CARD BODY --- */
+/* --------------------------------- */
+.report-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.report-data-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: var(--fs-body);
+  border-bottom: 1px dashed var(--clr-border-light);
+  padding-bottom: 0.4rem;
+}
+
+.report-data-item.full-width {
+  flex-direction: column;
+}
+
+.data-label {
+  font-weight: var(--fw-medium);
+  color: var(--clr-text-dark);
+}
+
+.data-value {
+  color: var(--clr-text-medium);
+  word-break: break-word;
+}
+
+/* Risk Color Indicators */
+.risk-high {
+  color: #dc3545;
+  font-weight: var(--fw-bold);
+}
+
+.risk-moderate {
+  color: #ff9800;
+  font-weight: var(--fw-medium);
+}
+
+.risk-low {
+  color: #28a745;
+  font-weight: var(--fw-medium);
+}
+
+.report-date {
+  font-size: var(--fs-small);
+  color: var(--clr-text-medium);
+}
+
+/* --------------------------------- */
+/* --- 7. AI SUGGESTIONS --- */
+/* --------------------------------- */
+.ai-suggestions-section {
+  margin-top: 1rem;
+  background-color: rgba(0, 188, 212, 0.05);
+  border-left: 4px solid var(--clr-primary);
+  border-radius: var(--radius-default);
+  padding: 0.8rem 1rem;
+}
+
+.ai-suggestions-section ul {
+  margin: 0.5rem 0 0;
+  padding-left: 1.5rem;
+}
+
+.ai-suggestions-section li {
+  margin-bottom: 0.4rem;
+  font-size: var(--fs-small);
+  color: var(--clr-text-medium);
+}
+
+/* --------------------------------- */
+/* --- 8. RESPONSIVE DESIGN --- */
+/* --------------------------------- */
+@media (max-width: 768px) {
+  .reports-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .report-card {
+    padding: 1rem;
+  }
+
+  .report-card-header h3 {
+    font-size: 1rem;
+  }
+
+  .download-pdf-btn {
+    padding: 0.4rem 0.8rem;
+  }
+}

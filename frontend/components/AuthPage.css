@@ -1,0 +1,193 @@
+/* frontend/components/AuthPage.css */
+
+/* --- Main Page Container (Full Screen) --- */
+.auth-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr; /* Two equal columns */
+  height: 100vh; /* Full screen height */
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background-color: #ffffff; /* Light background for the form side */
+}
+
+.dark .auth-page {
+  background-color: #1a2a40; /* Dark background for the form side in dark mode */
+}
+
+/* --- Left Panel: Image --- */
+.auth-image-panel {
+  background-image: url('https://images.unsplash.com/photo-1576091160550-2173dba999ef?q=80&w=2070&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+}
+
+/* --- Right Panel: Form --- */
+.auth-form-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+/* --- Form Card --- */
+.auth-form-card {
+  width: 100%;
+  max-width: 400px;
+}
+
+.auth-form-card h2 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #1a2a40;
+  margin-bottom: 0.5rem;
+}
+.dark .auth-form-card h2 {
+  color: #ffffff;
+}
+
+.auth-form-card .subtitle {
+  color: #555;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+.dark .auth-form-card .subtitle {
+  color: #a0aec0;
+}
+
+/* --- Custom Role Selector --- */
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.role-button {
+  padding: 0.75rem;
+  border-radius: 8px;
+  border: 2px solid #e0e0e0;
+  background-color: transparent;
+  color: #555;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+.dark .role-button {
+  border-color: #4a5568;
+  color: #a0aec0;
+}
+
+.role-button:hover {
+  border-color: #00bcd4;
+  color: #00bcd4;
+}
+
+.role-button.selected {
+  background-color: #00bcd4;
+  border-color: #00bcd4;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.3);
+}
+
+/* --- Input Fields --- */
+.input-group {
+  margin-bottom: 1.25rem;
+}
+
+.input-group label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+.dark .input-group label {
+  color: #cbd5e0;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+}
+.dark .input-group input {
+  background-color: #2d3748;
+  border-color: #4a5568;
+  color: white;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: #00bcd4;
+  box-shadow: 0 0 0 4px rgba(0, 188, 212, 0.2);
+}
+
+/* --- Buttons --- */
+.auth-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.auth-button {
+  padding: 0.8rem;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.primary-button {
+  background-color: #00bcd4;
+  color: white;
+  border: 2px solid #00bcd4;
+  box-shadow: 0 4px 15px rgba(0, 188, 212, 0.2);
+}
+.primary-button:hover {
+  background-color: #0097a7;
+  border-color: #0097a7;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 188, 212, 0.4);
+}
+
+.secondary-button {
+  background-color: transparent;
+  color: #00bcd4;
+  border: 2px solid #00bcd4;
+}
+.secondary-button:hover {
+  background-color: rgba(0, 188, 212, 0.1);
+}
+
+/* Error Message */
+.error {
+  color: #e74c3c;
+  background-color: rgba(231, 76, 60, 0.1);
+  border: 1px solid rgba(231, 76, 60, 0.2);
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 850px) {
+  .auth-page {
+    grid-template-columns: 1fr; /* Stack to a single column */
+    height: auto; /* Allow content to determine height */
+    min-height: 100vh;
+  }
+  .auth-image-panel {
+    display: none; /* Hide the image on smaller screens */
+  }
+  .auth-form-panel {
+    min-height: 100vh;
+  }
+}

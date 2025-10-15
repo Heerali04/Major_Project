@@ -1,0 +1,150 @@
+/* frontend/components/HomePage.css */
+
+/* --- Root Variables --- */
+:root {
+  --accent-color: #22d3ee; /* Bright cyan */
+  --glow-color: rgba(34, 211, 238, 0.3);
+  --card-bg: rgba(30, 41, 59, 0.6); /* Semi-transparent slate */
+  --card-border: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Main Home Page Container --- */
+.home-page {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Center all content vertically and horizontally */
+  text-align: center;
+  height: 100vh; /* CRITICAL: Makes the page exactly the height of the screen */
+  padding: 2rem;
+  overflow: hidden; /* Prevents any accidental overflow or scrollbars */
+  color: white;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background-color: #0c1422;
+}
+
+/* --- Static Background Image --- */
+.home-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://images.unsplash.com/photo-1579154286829-07c8a03a7f83?q=80&w=1974&auto=format&fit=crop');
+  background-size: cover;
+  background-position: center;
+  z-index: 1;
+}
+
+/* --- Dark Overlay --- */
+.home-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(12, 20, 34, 0.85); /* Darker overlay for better text contrast */
+  z-index: 2;
+}
+
+/* --- Content Container --- */
+.home-content {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem; /* Consistent spacing between elements */
+}
+
+/* --- Header & Slogan --- */
+.home-content h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem); /* Responsive font size */
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 0 15px var(--glow-color);
+}
+
+.home-content > p {
+  font-size: clamp(0.9rem, 2vw, 1.1rem);
+  max-width: 600px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  margin: 0; /* Remove default margins */
+}
+
+/* --- Call-to-Action Button --- */
+.cta-button {
+  display: inline-block;
+  padding: 0.8rem 2rem;
+  background: var(--accent-color);
+  color: #0c1422;
+  text-decoration: none;
+  font-weight: 700;
+  border-radius: 50px;
+  border: 2px solid var(--accent-color);
+  box-shadow: 0 0 20px var(--glow-color);
+  transition: all 0.3s ease;
+}
+
+.cta-button:hover {
+  background: transparent;
+  color: var(--accent-color);
+  transform: scale(1.05);
+}
+
+/* --- Cards Container --- */
+.cards-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Always 3 columns */
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1000px;
+}
+
+.card-link {
+  text-decoration: none;
+}
+
+/* --- Card Styling --- */
+.card {
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--card-border);
+  padding: 2rem 1.5rem;
+  border-radius: 15px;
+  transition: all 0.3s ease;
+}
+
+.card-link:hover .card {
+  border-color: var(--accent-color);
+  transform: translateY(-5px);
+  box-shadow: 0 0 20px var(--glow-color);
+}
+
+.card h3 {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  margin-bottom: 0.5rem;
+  color: white;
+}
+
+.card p {
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+  margin-bottom: 0;
+  color: #cbd5e1;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .cards-container {
+    grid-template-columns: 1fr; /* Stack cards vertically on mobile */
+    gap: 1rem;
+    max-width: 350px;
+  }
+
+  .home-content {
+    gap: 1.5rem;
+  }
+}

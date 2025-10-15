@@ -1,0 +1,225 @@
+/* --- 1. THEME & FONT DEFINITIONS --- */
+:root {
+  --font-primary: 'Inter', 'Segoe UI', sans-serif;
+  
+  /* Light Theme */
+  --bg-color: #f8fafc;
+  --bg-accent: #ffffff;
+  --text-primary: #1e293b;
+  --text-secondary: #475569;
+  --color-primary: #0ea5e9; 
+  --color-primary-light: #f0f9ff;
+  --border-color: #e2e8f0;
+  --card-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.1);
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --glow-color: rgba(14, 165, 233, 0.3); /* Glow for cards */
+}
+
+.dark {
+  /* Dark Theme */
+  --bg-color: #0f172a;
+  --bg-accent: #1e293b;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --color-primary: #38bdf8;
+  --color-primary-light: rgba(56, 189, 248, 0.1);
+  --border-color: #334155;
+  --card-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.3);
+  --card-bg: rgba(30, 41, 59, 0.7);
+  --glow-color: rgba(56, 189, 248, 0.2); /* Glow for cards */
+}
+
+/* --- 2. BASE & PAGE STYLES --- */
+.about-page {
+  font-family: var(--font-primary);
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  transition: background-color 0.3s, color 0.3s;
+  position: relative; /* Needed for the background blob */
+}
+
+/* New background blob element */
+.background-blob {
+  position: absolute;
+  top: -20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background-image: radial-gradient(circle, var(--color-primary-light) 0%, rgba(255,255,255,0) 60%);
+  z-index: 0;
+  opacity: 0.5;
+}
+.dark .background-blob {
+  background-image: radial-gradient(circle, rgba(56, 189, 248, 0.1) 0%, rgba(15, 23, 42, 0) 60%);
+}
+
+/* --- 3. GENERAL SECTION STYLING --- */
+.about-section {
+  padding: 6rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  position: relative; /* Ensure content is above the blob */
+  z-index: 1;
+  /* Smoother animation timing */
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.8s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.about-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* --- 4. HERO SECTION --- */
+.about-hero {
+  text-align: center;
+  padding-bottom: 7rem;
+}
+.hero-tagline {
+  font-weight: 600;
+  color: var(--color-primary);
+  background-color: var(--color-primary-light);
+  padding: 0.5rem 1.25rem;
+  border-radius: 99px;
+  margin-bottom: 1.5rem;
+  display: inline-block;
+}
+.about-hero h1 {
+  font-size: clamp(2.8rem, 6vw, 4.5rem);
+  font-weight: 800;
+  max-width: 850px;
+  margin: 0 auto 1.5rem auto;
+  line-height: 1.15;
+}
+.about-hero p {
+  font-size: clamp(1.1rem, 2.5vw, 1.25rem);
+  max-width: 700px;
+  margin: 0 auto 2.5rem auto;
+  color: var(--text-secondary);
+}
+.hero-cta {
+  display: inline-block;
+  background: var(--color-primary);
+  color: white;
+  padding: 1rem 2.5rem;
+  border-radius: 50px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px -5px rgba(14, 165, 233, 0.4);
+}
+.hero-cta:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px -5px rgba(14, 165, 233, 0.6);
+}
+
+/* --- 5. ALTERNATING CONTENT SECTIONS --- */
+.content-showcase {
+  background-color: var(--bg-accent);
+}
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: center;
+  gap: 3rem;
+}
+.content-text .icon {
+  font-size: 2.5rem;
+  color: var(--color-primary);
+  margin-bottom: 1.5rem;
+}
+.content-text h2 {
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+.content-text p {
+  font-size: 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.8;
+}
+.content-image-wrapper {
+  position: relative;
+  min-height: 350px;
+  border-radius: 16px;
+  overflow: hidden; /* Important for the zoom effect */
+}
+.content-image {
+  height: 100%;
+  width: 100%;
+  min-height: 400px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: var(--card-shadow);
+  transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.content-image-wrapper:hover .content-image {
+  transform: scale(1.05); /* New zoom effect on hover */
+}
+
+@media (min-width: 992px) {
+  .content-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4rem;
+  }
+}
+
+/* --- 6. TEAM SECTION --- */
+.team-section {
+  text-align: center;
+}
+.team-section h2 { 
+  font-size: clamp(2rem, 5vw, 2.75rem);
+  font-weight: 700; 
+}
+.team-intro { 
+  max-width: 650px; 
+  margin: 1rem auto 4rem auto; 
+  font-size: 1.1rem; 
+  color: var(--text-secondary); 
+}
+.team-grid {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+.team-member-card {
+  width: 280px;
+  text-align: center;
+  padding: 2rem;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--card-shadow);
+}
+.team-member-card:hover {
+  transform: translateY(-10px);
+  /* New glowing effect */
+  box-shadow: 0 0 25px var(--glow-color), var(--card-shadow);
+}
+.team-member-img {
+  width: 120px; 
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: -4.5rem auto 1rem auto; /* Adjusted for better alignment */
+  border: 4px solid var(--color-primary);
+  box-shadow: 0 5px 15px rgba(14, 165, 233, 0.3);
+}
+.team-member-card h4 { 
+  font-size: 1.3rem; 
+  font-weight: 600; 
+  margin-bottom: 0.25rem;
+  color: var(--text-primary);
+}
+.team-member-card .role { 
+  font-size: 1rem; 
+  color: var(--color-primary); 
+  font-weight: 500; 
+}

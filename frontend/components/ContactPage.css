@@ -1,0 +1,233 @@
+/* --- Design Tokens (CSS Variables) --- */
+:root {
+    --clr-primary: #00bcd4;          /* Teal (Primary Color) */
+    --clr-primary-dark: #0097a7;
+    --clr-bg-light: #f4f6f9;        /* Light Gray Background for the page */
+    --clr-card-bg: #ffffff;
+    --clr-text-dark: #2c3e50;       /* Dark text for headings/labels */
+    --clr-text-medium: #7f8c8d;     /* Subdued text/placeholders */
+    --radius-default: 12px;
+    --shadow-deep: 0 10px 30px rgba(0, 0, 0, 0.08);
+    --transition-fast: 0.25s ease;
+}
+
+/* --- Global Page Setup --- */
+.contact-page {
+    background-color: var(--clr-bg-light);
+    padding: 60px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Inter', sans-serif;
+}
+
+/* --- Main Container: Split Layout Card --- */
+.contact-container {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr; 
+    max-width: 1000px;
+    width: 100%;
+    border-radius: var(--radius-default);
+    overflow: hidden;
+    box-shadow: var(--shadow-deep);
+    background-color: var(--clr-card-bg);
+    min-height: 550px;
+}
+
+/* ---------------------------------- */
+/* --- 1. Left Panel: Form Section --- */
+/* ---------------------------------- */
+.contact-form-section {
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.contact-subtitle {
+    color: var(--clr-primary);
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    letter-spacing: 2px;
+}
+
+.contact-title {
+    color: var(--clr-text-dark);
+    font-size: 2rem;
+    font-weight: 800;
+    margin-bottom: 30px;
+}
+
+/* Form Layout (Grid for side-by-side inputs) */
+.contact-form {
+    width: 100%;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Full-width inputs (Textarea and single inputs on mobile) */
+.contact-form input[type="text"],
+.contact-form input[type="email"],
+.contact-form textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid var(--clr-text-medium);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--clr-text-dark);
+    box-sizing: border-box;
+    transition: all var(--transition-fast);
+}
+
+.contact-form textarea {
+    resize: vertical;
+    min-height: 120px;
+    margin-bottom: 20px;
+}
+
+.contact-form input::placeholder,
+.contact-form textarea::placeholder {
+    color: var(--clr-text-medium);
+    opacity: 0.7;
+}
+
+/* Input Focus Effect (Clean, modern focus ring) */
+.contact-form input:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: var(--clr-primary);
+    box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.25); 
+}
+
+/* Submit Button */
+.send-btn {
+    background-color: var(--clr-primary);
+    color: var(--clr-card-bg);
+    border: none;
+    padding: 14px 25px;
+    border-radius: 8px;
+    font-size: 1.05rem;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    letter-spacing: 1px;
+}
+
+.send-btn:hover {
+    background-color: var(--clr-primary-dark);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 188, 212, 0.4);
+}
+
+/* ----------------------------------- */
+/* --- 2. Right Panel: Image Section (UPDATED) --- */
+/* ----------------------------------- */
+.contact-image-section {
+    position: relative;
+    overflow: hidden;
+    background-color: #e0f2f7; /* A very light teal background as a base */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px; /* Add some padding around the image */
+}
+
+/* Decorative overlay - creates a subtle shape or effect */
+.image-decor {
+    position: absolute;
+    top: -50px; /* Position it outside to create a partial shape */
+    right: -50px;
+    width: 180px;
+    height: 180px;
+    background-color: rgba(0, 188, 212, 0.1); /* Lighter transparent teal */
+    border-radius: 50%; /* Circular shape */
+    z-index: 1; /* Behind the image */
+    pointer-events: none; /* Make it non-interactive */
+}
+
+/* Another decor element */
+.image-decor::before {
+    content: '';
+    position: absolute;
+    bottom: -30px;
+    left: -30px;
+    width: 100px;
+    height: 100px;
+    background-color: rgba(0, 188, 212, 0.05); /* Even lighter transparent teal */
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+
+.contact-image {
+    max-width: 100%; /* Ensure image scales down */
+    max-height: 100%; /* Ensure image scales down */
+    height: auto; /* Maintain aspect ratio */
+    object-fit: contain; /* UPDATED: 'contain' to show full image, 'cover' if you want it to fill */
+    border-radius: var(--radius-default); /* Match container border-radius */
+    box-shadow: var(--shadow-deep); /* Add a subtle shadow to the image */
+    z-index: 2; /* Ensure image is above decor elements */
+}
+
+/* ------------------------------ */
+/* --- 3. Responsive Design --- */
+/* ------------------------------ */
+
+@media (max-width: 850px) {
+    .contact-container {
+        grid-template-columns: 1fr; 
+        max-width: 95%;
+        min-height: auto;
+    }
+    
+    .contact-form-section {
+        padding: 30px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr; 
+        gap: 0;
+        margin-bottom: 0;
+    }
+    
+    .form-row input {
+        margin-bottom: 20px;
+    }
+
+    /* Keep image on tablets, but simplify */
+    .contact-image-section {
+        padding: 20px;
+        min-height: 250px; /* Give it some height */
+    }
+
+    /* Hide decorative elements on smaller screens for simplicity */
+    .image-decor,
+    .image-decor::before {
+        display: none;
+    }
+}
+
+@media (max-width: 550px) {
+    /* Hide the image section entirely on very small mobile screens */
+    .contact-image-section {
+        display: none;
+    }
+    .contact-form-section {
+        padding: 20px;
+    }
+    .contact-title {
+        font-size: 1.6rem;
+    }
+    .send-btn {
+        font-size: 1rem;
+        padding: 12px 20px;
+    }
+}
