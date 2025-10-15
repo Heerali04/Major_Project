@@ -1,153 +1,198 @@
-/* --- Global Variables (Essential for consistency) --- */
+/* frontend/App.css */
+
+/* --- Global Variables --- */
 :root {
-    --accent-color: #00bcd4; /* Vibrant Teal/Aqua */
-    --accent-dark: #0097a7;
-    --bg-light: #f7f9fb;
-    --text-light: #333;
-    --card-light: #ffffff; /* Added for card backgrounds */
-    --border-light: #eee; /* Added for borders */
-    --bg-dark: #121212; /* Very dark background for the whole app */
-    --text-dark: #e0e0e0;
-    --navbar-light: #ffffff;
-    --navbar-dark: #1f1f1f;
-    --shadow-base: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --accent-color: #00bcd4;
+  --accent-dark: #0097a7;
+  --bg-light: #f7f9fb;
+  --text-light: #333;
+  --card-light: #ffffff;
+  --border-light: #eee;
+  --bg-dark: #121212;
+  --text-dark: #e0e0e0;
+  --navbar-dark: #1f1f1f;
+  --shadow-base: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-/* --- Base App Container --- */
+/* --- Main App Layout --- */
 .app-container {
-    display: flex; /* Essential for sticky footer */
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: var(--bg-light);
-    color: var(--text-light);
-    transition: background-color 0.4s ease, color 0.4s ease;
-    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Ensures the app is at least the full screen height */
+  background-color: var(--bg-light);
+  font-family: 'Inter', 'Segoe UI', sans-serif;
 }
 
 .app-container.dark {
-    background-color: var(--bg-dark);
-    color: var(--text-dark);
+  background-color: var(--bg-dark);
+}
+
+/* CRITICAL FIX: This makes the main content area expand and allows the homepage to fill it. */
+.main-content {
+  flex: 1; /* This is essential for the layout to work */
+  display: flex;
+  flex-direction: column;
 }
 
 /* --- Navigation Bar --- */
 .navbar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 30px;
-    background-color: var(--navbar-light);
-    box-shadow: var(--shadow-base);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    transition: background-color 0.4s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background-color: white;
+  box-shadow: var(--shadow-base);
+  z-index: 100;
+  flex-shrink: 0; /* Prevents navbar from shrinking */
 }
 
 .navbar.dark {
-    background-color: var(--navbar-dark);
-    box-shadow: 0 2px 4px rgba(255, 255, 255, 0.05);
+  background-color: var(--navbar-dark);
 }
 
 .navbar .logo {
-    font-size: 1.5em;
-    font-weight: 700;
-    color: var(--accent-color);
-    text-decoration: none;
+  font-size: 1.5em;
+  font-weight: 700;
+  color: var(--accent-color);
+  text-decoration: none;
 }
 
-/* Nav Links Group */
+/* ... (rest of the navbar styles are fine) ... */
 .navbar .nav-links {
-    display: flex;
-    gap: 25px;
-    margin-right: auto;
-    margin-left: 40px;
+  display: flex;
+  gap: 25px;
+  margin-right: auto;
+  margin-left: 40px;
 }
-
 .navbar .nav-link {
-    text-decoration: none;
-    color: var(--text-light);
-    font-weight: 500;
-    padding: 5px 0;
-    border-bottom: 2px solid transparent;
-    transition: color 0.2s ease, border-color 0.2s ease;
+  text-decoration: none;
+  color: var(--text-light);
+  font-weight: 500;
 }
-
 .navbar.dark .nav-link {
-    color: var(--text-dark);
+  color: var(--text-dark);
 }
-
-.navbar .nav-link:hover,
-.navbar .nav-link.active {
-    color: var(--accent-color);
-    border-bottom-color: var(--accent-color);
+.navbar .nav-link:hover {
+  color: var(--accent-color);
 }
-
-/* Nav Buttons Group */
 .navbar .nav-buttons {
-    display: flex;
-    gap: 15px;
-    align-items: center;
+  display: flex;
+  gap: 15px;
+  align-items: center;
 }
-
-/* Base Button Style */
 .navbar button {
-    padding: 8px 15px;
-    border: 1px solid var(--accent-color);
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: all 0.2s ease;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
 }
-
-/* Dark Mode Button */
 .navbar .dark-mode-btn {
-    background: transparent;
-    color: var(--accent-color);
+  border: 1px solid var(--accent-color);
+  background: transparent;
+  color: var(--accent-color);
 }
-
 .navbar .dark-mode-btn:hover {
-    background-color: rgba(0, 188, 212, 0.1);
+  background-color: rgba(0, 188, 212, 0.1);
 }
-
-/* Logout Button */
 .navbar .logout-btn {
-    background-color: #e74c3c;
-    color: white;
-    border-color: #e74c3c;
+  background-color: #e74c3c;
+  color: white;
+  border: 1px solid #e74c3c;
 }
-
 .navbar .logout-btn:hover {
-    background-color: #c0392b;
+  background-color: #c0392b;
 }
 
-/* Dark Mode Button Overrides */
-.navbar.dark .dark-mode-btn {
-    border-color: var(--accent-color);
-    color: var(--accent-color);
-    background: transparent;
+
+/* --- Footer --- */
+.app-footer {
+  padding: 25px 30px;
+  background-color: #f0f4f8;
+  border-top: 1px solid var(--border-light);
+  color: #666;
+  text-align: center;
+  flex-shrink: 0; /* Prevents footer from shrinking */
 }
 
-.navbar.dark .dark-mode-btn:hover {
-    background-color: rgba(0, 188, 212, 0.1);
+.app-footer.dark {
+  background-color: var(--navbar-dark);
+  border-top-color: #333;
+  color: #999;
 }
 
-.navbar.dark .logout-btn {
-    background-color: #e74c3c;
-    border-color: #e74c3c;
+/* ... (rest of footer styles are fine) ... */
+.app-footer .footer-links {
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+}
+.app-footer .footer-links a {
+  color: #666;
+  text-decoration: none;
+}
+.app-footer.dark .footer-links a {
+  color: #ccc;
+}
+.app-footer .footer-links a:hover {
+  color: var(--accent-color);
+}
+.app-footer .copyright {
+  font-size: 0.85em;
+  color: #888;
+}
+.app-footer.dark .copyright {
+  color: #666;
+}
+
+
+/* --- Responsiveness --- */
+@media (max-width: 768px) {
+  /* Navbar Responsiveness */
+  .navbar {
+    flex-wrap: wrap;
+    padding: 15px 20px;
+  }
+
+  .navbar .logo {
+    width: 100%;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+
+  .navbar .nav-links {
+    width: 100%;
+    justify-content: center;
+    gap: 15px;
+    margin: 0;
+    margin-bottom: 10px;
+  }
+
+  .navbar .nav-buttons {
+    width: 100%;
+    justify-content: space-around;
+    gap: 10px;
+  }
+
+  /* Other pages responsiveness */
+  .standard-page-container {
+    padding: 20px 15px;
+  }
 }
 
 /* --- Main Content Area --- */
 .main-content {
-    /* flex: 1; ensures main content fills available space, pushing footer down */
-    flex: 1; 
-    padding-top: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 /* -------------------------------------------------------------------------- */
 /* HOME PAGE (Landing)                         */
 /* -------------------------------------------------------------------------- */
 
-.home-page {
+/*.home-page {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -156,7 +201,7 @@
     max-width: 1000px;
     margin: 0 auto;
     transition: background-color 0.4s ease, color 0.4s ease;
-}
+}*/
 
 .home-page h1 {
     font-size: 3.2em;
