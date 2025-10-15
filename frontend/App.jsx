@@ -2,41 +2,16 @@ import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from "react-router-dom"; 
 
 // Import all application pages/components
-// NOTE: Ensure these files exist in your components directory
 import UploadPage from "./components/UploadPage";
 import ResultsPage from "./components/ResultsPage";
 import SymptomsPage from "./components/SymptomsPage";
-import AuthPage from "./components/AuthPage"; // Handles both Login and Sign Up
-import ReportsPage from "./components/ReportsPage"; // Doctor dashboard
+import AuthPage from "./components/AuthPage"; 
+import DoctorDashboard from "./components/DoctorDashboard";
 import AboutPage from "./components/AboutPage";
 import ContactPage from "./components/ContactPage";
+import HomePage from "./components/HomePage";
+
 import "./App.css"; 
-
-// --- Home Page Component (Landing Page for Logged-Out Users) ---
-function HomePage({ darkMode }) {
-  const homeClass = `home-page ${darkMode ? "dark" : ""}`;
-  
-  return (
-    <div className={homeClass}>
-      <h1>🧪 Welcome to MyProject</h1>
-      <p>
-        Upload reports, check symptoms, and view analytics with a single click.
-        Sign in to get started!
-      </p>
-
-      <Link to="/login" className="cta-button">
-        Login / Sign Up
-      </Link>
-
-      <div className="cards-container">
-        {/* Links point to /login since the user is logged out */}
-        <Link to="/login" className="card-link"><div className="card"><h3>📄 Upload Reports</h3><p>Upload your lab reports and get instant analysis.</p></div></Link>
-        <Link to="/login" className="card-link"><div className="card"><h3>🩺 Check Symptoms</h3><p>Enter your symptoms and get possible health insights.</p></div></Link>
-        <Link to="/login" className="card-link"><div className="card"><h3>📊 View Reports</h3><p>Access all your uploaded reports and their analytics.</p></div></Link>
-      </div>
-    </div>
-  );
-}
 
 // --- Main Application Component (Wrapper for Router) ---
 function App() {
@@ -112,17 +87,21 @@ function AppContent({ loggedIn, userRole, userId, darkMode, setLoggedIn, setUser
         // Correct role and logged in: render the component
         return <Element {...rest} darkMode={darkMode} userId={userId} />;
     };
+    
+    // Helper component for Doctor Routes that allows viewing a specific patient profile
+    // Note: PatientProfile is not a separate Route, it's rendered INSIDE DoctorDashboard.
+    // However, if you wanted a direct path like /reports/patient/:id, you would use it here.
+    // For now, we only need a path for the dashboard.
 
     return (
         <div className={`app-container ${darkMode ? "dark" : ""}`}>
             
             {/* --- Navigation Bar --- */}
             <nav className={`navbar ${darkMode ? "dark" : ""}`}>
-                <Link to="/" className="logo">🧬 MyProject</Link>
+                <Link to="/" className="logo">🧬 Zoonotic AI</Link>
                 
                 {/* General Links: Home, About, Contact (Always visible) */}
                 <div className="nav-links">
-                    {/* *** ADDED HOME LINK HERE *** */}
                     <Link to="/" className="nav-link">Home</Link>
                     <Link to="/about" className="nav-link">About</Link>
                     <Link to="/contact" className="nav-link">Contact</Link>
@@ -180,13 +159,20 @@ function AppContent({ loggedIn, userRole, userId, darkMode, setLoggedIn, setUser
                     <Route path="/results" element={<ProtectedRoute element={ResultsPage} allowedRole="user" />} />
 
                     {/* Protected Doctor Route */}
-                    <Route path="/reports" element={<ProtectedRoute element={ReportsPage} allowedRole="doctor" />} />
+                    <Route path="/reports" element={<ProtectedRoute element={DoctorDashboard} allowedRole="doctor" />} />
+                    
+                    {/* Doctor Specific Route (e.g., viewing a specific patient profile) 
+                        Note: The DoctorDashboard component handles rendering the profile.
+                        If you want a dedicated route for profile viewing:
+                    <Route path="/reports/patient/:patientId" element={<ProtectedRoute element={PatientProfile} allowedRole="doctor" />} /> 
+                    */}
+
 
                     {/* Catch-all Redirect */}
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
             </main>
-
+            
             {/* --- Footer --- */}
             <footer className={`app-footer ${darkMode ? "dark" : ""}`}>
                 <div className="footer-links">
@@ -194,7 +180,7 @@ function AppContent({ loggedIn, userRole, userId, darkMode, setLoggedIn, setUser
                     <Link to="/contact">Contact</Link>
                     <Link to="/privacy">Privacy Policy</Link>
                 </div>
-                <p className="copyright">&copy; {new Date().getFullYear()} MyProject. All rights reserved.</p>
+                <p className="copyright">&copy; {new Date().getFullYear()} Zoonotic AI. All rights reserved.</p>
             </footer>
         </div>
     );
